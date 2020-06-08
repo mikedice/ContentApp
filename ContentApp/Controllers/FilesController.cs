@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ContentApp.Data;
+using ContentApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +14,12 @@ namespace ContentApp.Controllers
     [ApiController]
     public class FilesController : ControllerBase
     {
+        private readonly ContentAppDbContext dbContext;
+        public FilesController(ContentAppDbContext dbContext)
+        {
+            this.dbContext = dbContext;
+        }
+
         // GET: api/Files
         [HttpGet]
         public IEnumerable<string> Get()
@@ -56,6 +64,14 @@ namespace ContentApp.Controllers
                             await formFile.CopyToAsync(memStream);
                             memStream.Seek(0, SeekOrigin.Begin);
                             var fileName = FileStorage.StoreImage(memStream);
+
+                            var asset = new Asset
+                            {
+                                AssetType = AssetType.Photo,
+                                FilePrefix = fileName
+                            };
+                            this.dbContext.Assets.Add(asset);
+                            await this.dbContext.SaveChangesAsync();
                         }
                     }
                 }

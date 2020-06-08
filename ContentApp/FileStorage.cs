@@ -14,7 +14,7 @@ namespace ContentApp
 {
     public class FileStorage
     {
-        private static string connection = "DefaultEndpointsProtocol=https;AccountName=contentstorage417;AccountKey=iLqvukxK9cz3l3Jp2g6QWO2teiTfXbwLQ2WoBY6xt+CDw67/K/CEOgGkjS2LusqjRIwnZDWVF6jqDkOEtYc9qw==;EndpointSuffix=core.windows.net";
+        private static string connection = "TODO";
         private const string ImageKeyTiny = "tiny";
         private const string ImageKeyMedium = "medium";
         private const string ImageKeyOriginal = "normal";
