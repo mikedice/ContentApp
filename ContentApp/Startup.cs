@@ -28,8 +28,12 @@ namespace ContentApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+
             services.AddDbContext<ContentAppDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("ContentDb")));
+
+            services.AddDbContext<ContentAppDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("SQLCONNSTR_MS_TableConenctionString")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
