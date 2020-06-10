@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ContentApp.Data;
+using ContentApp.KeyVault;
 using ContentApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,20 @@ namespace ContentApp.Controllers
     public class FilesController : ControllerBase
     {
         private readonly ContentAppDbContext dbContext;
-        public FilesController(ContentAppDbContext dbContext)
+        private readonly IKeyVaultPiece keyVaultPiece;
+
+        public FilesController(ContentAppDbContext dbContext,
+            IKeyVaultPiece keyVaultPiece)
         {
             this.dbContext = dbContext;
+            this.keyVaultPiece = keyVaultPiece;
         }
 
         // GET: api/Files
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IEnumerable<string>> Get()
         {
+            var connstr = await keyVaultPiece.GetBlobConnectionString();
             return new string[] { "value1", "value2" };
         }
 
