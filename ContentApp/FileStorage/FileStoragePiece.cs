@@ -5,14 +5,13 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using ContentApp.KeyVault;
 using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Auth;
 using Microsoft.Azure.Storage.Blob;
 
-namespace ContentApp
+namespace ContentApp.FileStorage
 {
-    public class FileStorage
+    public class FileStoragePiece : IFileStoragePiece
     {
         private static string connection = "TODO";
         private const string ImageKeyTiny = "tiny";
@@ -28,6 +27,51 @@ namespace ContentApp
         private const int RotateLeft = 6;
         private const int MirorHorizontalAndRotateLeft = 7;
         private const int RotateRight = 8;
+        private readonly IKeyVaultPiece keyVaultPiece;
+
+        public FileStoragePiece(IKeyVaultPiece keyVaultPiece)
+        {
+            this.keyVaultPiece = keyVaultPiece;
+        }
+
+        public string StoreImage(Stream data)
+        {
+            var imageDictionary = PrepareImages(data);
+            var fileBase = Guid.NewGuid().ToString();
+            if (CloudStorageAccount.TryParse(connection, out var storageAccount))
+            {
+                CloudBlobClient client = storageAccount.CreateCloudBlobClient();
+
+                var container = client.GetContainerReference("images");
+
+                foreach (var kvp in imageDictionary)
+                {
+                    var fileName = $"{fileBase}.{kvp.Key}.jpg";
+                    var blockBlob = container.GetBlockBlobReference(fileName);
+                    blockBlob.Properties.ContentType = "image/jpeg";
+                    using (var memStream = new MemoryStream())
+                    {
+                        kvp.Value.Save(memStream, ImageFormat.Jpeg);
+                        memStream.Flush();
+                        memStream.Seek(0, SeekOrigin.Begin);
+                        blockBlob.UploadFromStream(memStream);
+                    }
+                }
+                return fileBase;
+            }
+            return null;
+        }
+
+        private static Dictionary<string, Image> PrepareImages(Stream data)
+        {
+            Dictionary<string, Image> result = new Dictionary<string, Image>();
+
+            var original = Image.FromStream(data, false, false);
+            result.Add(ImageKeyTiny, ScaleImage(original, 0.1));
+            result.Add(ImageKeyMedium, ScaleImage(original, 0.3));
+            result.Add(ImageKeyOriginal, original);
+            return result;
+        }
 
         private static Image ScaleImage(Image original, double scale)
         {
@@ -81,67 +125,5 @@ namespace ContentApp
             }
             return newImage;        
         }
-
-        private static Dictionary<string, Image> PrepareImages(Stream data) 
-        {
-            Dictionary<string, Image> result = new Dictionary<string, Image>();
-            
-            var original = Image.FromStream(data, false, false);
-            result.Add(ImageKeyTiny, ScaleImage(original, 0.1));
-            result.Add(ImageKeyMedium, ScaleImage(original, 0.3));
-            result.Add(ImageKeyOriginal, original);
-            return result;
-        }
-
-        
-        public static string StoreImage(Stream data)
-        {
-            var imageDictionary = PrepareImages(data);
-            var fileBase = Guid.NewGuid().ToString();
-            if (CloudStorageAccount.TryParse(connection, out var storageAccount))
-            {
-                CloudBlobClient client = storageAccount.CreateCloudBlobClient();
-
-                var container = client.GetContainerReference("images");
-
-                foreach (var kvp in imageDictionary)
-                {
-                    var fileName = $"{fileBase}.{kvp.Key}.jpg";
-                    var blockBlob = container.GetBlockBlobReference(fileName);
-                    blockBlob.Properties.ContentType = "image/jpeg";
-                    using (var memStream = new MemoryStream())
-                    {
-                        kvp.Value.Save(memStream, ImageFormat.Jpeg);
-                        memStream.Flush();
-                        memStream.Seek(0, SeekOrigin.Begin);
-                        blockBlob.UploadFromStream(memStream);
-                    }
-                }
-                return fileBase;
-            }
-            return null;
-        }
-        
-        /*
-        public static string StoreImage(Stream data)
-        {
-            var fileBase = Guid.NewGuid().ToString();
-            if (CloudStorageAccount.TryParse(connection, out var storageAccount))
-            {
-                CloudBlobClient client = storageAccount.CreateCloudBlobClient();
-
-                var container = client.GetContainerReference("images");
-
-                    var fileName = $"{fileBase}.{ImageKeyOriginal}.jpg";
-                    var blockBlob = container.GetBlockBlobReference(fileName);
-                    blockBlob.Properties.ContentType = "image/jpeg";
-                    blockBlob.UploadFromStream(data);
-                
-                return fileBase;
-            }
-            return null;
-        }
-        */
-
     }
 }

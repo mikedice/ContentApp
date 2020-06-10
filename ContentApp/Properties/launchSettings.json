@@ -20,7 +20,7 @@
     "ContentApp": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "weatherforecast",
+      "launchUrl": "api/files",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

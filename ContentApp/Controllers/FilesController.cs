@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ContentApp.Data;
-using ContentApp.KeyVault;
+using ContentApp.FileStorage;
 using ContentApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,20 +15,19 @@ namespace ContentApp.Controllers
     public class FilesController : ControllerBase
     {
         private readonly ContentAppDbContext dbContext;
-        private readonly IKeyVaultPiece keyVaultPiece;
+        private readonly IFileStoragePiece fileStoragePiece;
 
         public FilesController(ContentAppDbContext dbContext,
-            IKeyVaultPiece keyVaultPiece)
+            IFileStoragePiece fileStoragePiece)
         {
             this.dbContext = dbContext;
-            this.keyVaultPiece = keyVaultPiece;
+            this.fileStoragePiece = fileStoragePiece;
         }
 
         // GET: api/Files
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
-            var connstr = await keyVaultPiece.GetBlobConnectionString();
             return new string[] { "value1", "value2" };
         }
 
@@ -69,7 +67,7 @@ namespace ContentApp.Controllers
                         {
                             await formFile.CopyToAsync(memStream);
                             memStream.Seek(0, SeekOrigin.Begin);
-                            var fileName = FileStorage.StoreImage(memStream);
+                            var fileName = this.fileStoragePiece.StoreImage(memStream);
 
                             var asset = new Asset
                             {

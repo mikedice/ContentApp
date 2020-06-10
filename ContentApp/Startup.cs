@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ContentApp.Data;
+using ContentApp.FileStorage;
 using ContentApp.KeyVault;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -36,7 +37,8 @@ namespace ContentApp
             services.AddDbContext<ContentAppDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("SQLCONNSTR_MS_TableConenctionString")));
 
-            services.AddSingleton<IKeyVaultPiece>(new KeyVaultPiece());
+            services.AddSingleton<IKeyVaultPiece, KeyVaultPiece>();
+            services.AddSingleton<IFileStoragePiece, FileStoragePiece>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
