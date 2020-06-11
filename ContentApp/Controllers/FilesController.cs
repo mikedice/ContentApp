@@ -7,6 +7,7 @@ using ContentApp.FileStorage;
 using ContentApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 
 namespace ContentApp.Controllers
 {
@@ -16,19 +17,23 @@ namespace ContentApp.Controllers
     {
         private readonly ContentAppDbContext dbContext;
         private readonly IFileStoragePiece fileStoragePiece;
-
+        private readonly IConfiguration configuration;
         public FilesController(ContentAppDbContext dbContext,
-            IFileStoragePiece fileStoragePiece)
+            IFileStoragePiece fileStoragePiece,
+            IConfiguration configuration)
         {
             this.dbContext = dbContext;
             this.fileStoragePiece = fileStoragePiece;
+            this.configuration = configuration;
         }
 
         // GET: api/Files
         [HttpGet]
         public async Task<IEnumerable<string>> Get()
         {
-            return new string[] { "value1", "value2" };
+
+            return new string[] { configuration.GetConnectionString("MDConnectionString"),
+                "foo" };
         }
 
         // GET: api/Files/5

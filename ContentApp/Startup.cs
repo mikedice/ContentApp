@@ -26,16 +26,23 @@ namespace ContentApp
 
         public IConfiguration Configuration { get; }
 
+        private IWebHostEnvironment CurrentEnv { get; set; }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
-            services.AddDbContext<ContentAppDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("ContentDb")));
-
-            services.AddDbContext<ContentAppDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("SQLCONNSTR_MS_TableConenctionString")));
+            if (CurrentEnv?.IsDevelopment() == true)
+            {
+                services.AddDbContext<ContentAppDbContext>(options =>
+                    options.UseSqlite(Configuration.GetConnectionString("MDConnectionString")));
+            }
+            else
+            {
+                services.AddDbContext<ContentAppDbContext>(options =>
+                    options.UseSqlServer(Configuration.GetConnectionString("MDConnectionString")));
+            }
 
             services.AddSingleton<IKeyVaultPiece, KeyVaultPiece>();
             services.AddSingleton<IFileStoragePiece, FileStoragePiece>();
@@ -44,6 +51,8 @@ namespace ContentApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            CurrentEnv = env;
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
