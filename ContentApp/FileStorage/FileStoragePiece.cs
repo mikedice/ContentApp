@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using ContentApp.KeyVault;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Blob;
@@ -13,7 +14,6 @@ namespace ContentApp.FileStorage
 {
     public class FileStoragePiece : IFileStoragePiece
     {
-        private static string connection = "TODO";
         private const string ImageKeyTiny = "tiny";
         private const string ImageKeyMedium = "medium";
         private const string ImageKeyOriginal = "normal";
@@ -34,11 +34,13 @@ namespace ContentApp.FileStorage
             this.keyVaultPiece = keyVaultPiece;
         }
 
-        public string StoreImage(Stream data)
+        public async Task<string> StoreImage(Stream data)
         {
             var imageDictionary = PrepareImages(data);
             var fileBase = Guid.NewGuid().ToString();
-            if (CloudStorageAccount.TryParse(connection, out var storageAccount))
+            var connectionString = await keyVaultPiece.GetBlobConnectionString();
+            
+            if (CloudStorageAccount.TryParse(connectionString, out var storageAccount))
             {
                 CloudBlobClient client = storageAccount.CreateCloudBlobClient();
 
