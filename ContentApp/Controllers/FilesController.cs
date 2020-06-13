@@ -33,8 +33,7 @@ namespace ContentApp.Controllers
         public async Task<IEnumerable<string>> Get()
         {
 
-            return new string[] { configuration.GetConnectionString("MDConnectionString"),
-                "foo" };
+            return new string[] { "foo", "foo" };
         }
 
         // GET: api/Files/5
@@ -62,8 +61,6 @@ namespace ContentApp.Controllers
             long size = 0;
             try
             {
-
-
                 size = files.Sum(f => f.Length);
 
                 foreach (var formFile in files)

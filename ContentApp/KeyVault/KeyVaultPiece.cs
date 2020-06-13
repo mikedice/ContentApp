@@ -16,6 +16,7 @@ namespace ContentApp.KeyVault
             this.keyVaultClient = new KeyVaultClient(
                     new KeyVaultClient.AuthenticationCallback(this.azureServiceTokenProvider.KeyVaultTokenCallback));
 
+            
         }
 
         public async Task<string> GetSqlConnectionString()
