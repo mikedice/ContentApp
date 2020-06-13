@@ -83,7 +83,8 @@ namespace ContentApp.Controllers
                                 var asset = new Asset
                                 {
                                     AssetType = AssetType.Photo,
-                                    FilePrefix = fileName
+                                    FilePrefix = fileName,
+                                    CreatedOn = DateTime.UtcNow
                                 };
                                 this.dbContext.Assets.Add(asset);
                                 await this.dbContext.SaveChangesAsync();
