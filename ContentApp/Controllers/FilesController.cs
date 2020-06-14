@@ -9,6 +9,7 @@ using ContentApp.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace ContentApp.Controllers
 {
@@ -18,14 +19,15 @@ namespace ContentApp.Controllers
     {
         private readonly ContentAppDbContext dbContext;
         private readonly IFileStoragePiece fileStoragePiece;
-        private readonly IConfiguration configuration;
+        private readonly ILogger<FilesController> logger;
+
         public FilesController(ContentAppDbContext dbContext,
             IFileStoragePiece fileStoragePiece,
-            IConfiguration configuration)
+            ILogger<FilesController> logger)
         {
             this.dbContext = dbContext;
             this.fileStoragePiece = fileStoragePiece;
-            this.configuration = configuration;
+            this.logger = logger;
         }
 
         // GET: api/Files
@@ -67,35 +69,36 @@ namespace ContentApp.Controllers
                 {
                     if (formFile.Length > 0)
                     {
-                        var filePath = Path.GetTempFileName();
-
-                        using (var stream = System.IO.File.Create(filePath))
+                        using (var readStream = formFile.OpenReadStream())
                         {
-                            using (var memStream = new MemoryStream())
-                            {
-                                await formFile.CopyToAsync(memStream);
-                                memStream.Seek(0, SeekOrigin.Begin);
-                                var fileName = await this.fileStoragePiece.StoreImage(memStream);
+                            logger.LogInformation($"Storing image file of type {formFile.ContentType} uploaded as file named {formFile.FileName}");
 
-                                var asset = new Asset
-                                {
-                                    AssetType = AssetType.Photo,
-                                    FilePrefix = fileName,
-                                    CreatedOn = DateTime.UtcNow
-                                };
-                                this.dbContext.Assets.Add(asset);
-                                await this.dbContext.SaveChangesAsync();
-                            }
+                            // IFileStoragePiece will read the stream as a jpeg image
+                            // convert it to three different sizes and store each converted
+                            // file in the blob store. The returned string is the prefix of
+                            // all the files created.
+                            var fileName = await this.fileStoragePiece.StoreImage(readStream);
+
+                            // Create a record in the database to keep track of this uploaed file
+                            var asset = new Asset
+                            {
+                                AssetType = AssetType.Photo,
+                                FilePrefix = fileName,
+                                CreatedOnUtc = DateTime.UtcNow,
+                                UploadedFileName = formFile.FileName
+                            };
+                            this.dbContext.Assets.Add(asset);
+                            await this.dbContext.SaveChangesAsync();
+
+                            logger.LogInformation($"Completed storing image with file prefix {fileName}");
                         }
                     }
                 }
             }
             catch(Exception e)
             {
-                Console.WriteLine(e.ToString());
+                logger.LogError(e, $"Error storing file");
             }
-            // Process uploaded files
-            // Don't rely on or trust the FileName property without validation.
 
             return Ok(new { count = files.Count, size });
         }
